@@ -3,8 +3,8 @@ from pathlib import Path
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from uvicorn import run
 
-from chimerapy.engine import Worker
 from chimerapy.workerui.utils import instantiate_worker
+
 
 def add_worker_connect_parser(subparsers):
     """Add the worker connect parser to the subparsers."""
@@ -67,7 +67,6 @@ def add_worker_connect_parser(subparsers):
         required=False,
     )
 
-
     worker_connect_parser.add_argument(
         "--timeout",
         "-t",
@@ -116,6 +115,7 @@ def serve_worker_ui(args):
         reload=True,
         reload_dirs=[str(Path(__file__).parent.parent.resolve())],
     )
+
 
 def main(args=None):
     """The CLI entrypoint for the worker UI."""

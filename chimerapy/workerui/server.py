@@ -2,8 +2,6 @@ from pathlib import Path
 
 from typing import Dict
 
-from chimerapy.engine.worker import Worker
-from chimerapy.engine.states import WorkerState
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -25,9 +23,7 @@ class ChimeraPyWorkerUI(FastAPI):
             self.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
             self.mount("/_app", StaticFiles(directory=STATIC_DIR / "_app"), name="_app")
             self.add_api_route(
-                "/",
-                lambda: RedirectResponse(url="static"),
-                methods=["GET"]
+                "/", lambda: RedirectResponse(url="static"), methods=["GET"]
             )
 
     def _add_routes(self):

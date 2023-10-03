@@ -1,9 +1,10 @@
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 
 
 class WorkerConfig(BaseModel):
     """Configuration for the chimerapy worker creation"""
+
     name: str = Field(
         ...,
         description="Name of the worker",

@@ -1,6 +1,7 @@
 from typing import Optional
 from chimerapy.engine.worker import Worker
 
+
 def instantiate_worker(
     name: str,
     id: Optional[str] = None,
