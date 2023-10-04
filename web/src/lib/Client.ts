@@ -15,17 +15,18 @@ export class WorkerClient {
 		return await response.json();
 	}
 
-	async connectWorker(config: WorkerConfig) {
-		return await this._fetch('/connect', {
+	async connect(config: WorkerConfig) {
+		const response = await this._fetch('/connect', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(config)
 		});
+		return await response.json() as WorkerConfig;
 	}
 
-	async _fetch(path: string, init?: RequestInit) {
+	async _fetch(path: string, init?: RequestInit): Promise<Response> {
 		const response = await fetch(`${this.url}${path}`, init);
 		if (!response.ok) {
 			throw new Error(response.statusText);
