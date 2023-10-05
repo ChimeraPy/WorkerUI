@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from typing import Dict, Any, Optional
-
+from typing import Dict, Any, Optional, Tuple
+from concurrent.futures import TimeoutError
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -11,8 +11,7 @@ from chimerapy.workerui.utils import instantiate_worker
 import asyncio
 from chimerapy.engine.worker import Worker
 from chimerapy.workerui.worker_state_broadcaster import WorkerStateBroadcaster
-from fastapi.websockets import WebSocket, WebSocketDisconnect
-from starlette.websockets import WebSocketState
+from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 
 async def relay(
@@ -48,10 +47,12 @@ STATIC_DIR = Path(__file__).parent / "build"
 class ChimeraPyWorkerUI(FastAPI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._serve_static_files()
         self.worker_instance: Optional[Worker] = None
-        self.updates_broadcaster: Optional[WorkerStateBroadcaster] = None
+        self.updates_broadcaster: Optional[
+            WorkerStateBroadcaster
+        ] = WorkerStateBroadcaster()
         self._add_routes()
+        self._serve_static_files()
 
     def _serve_static_files(self):
         if STATIC_DIR.exists():
@@ -64,10 +65,15 @@ class ChimeraPyWorkerUI(FastAPI):
     def _add_routes(self):
         self.add_api_route("/state", self._get_worker_state, methods=["GET"])
         self.add_api_route("/connect", self._instantiate_worker, methods=["POST"])
+        self.add_api_route("/shutdown", self._shutdown_worker, methods=["POST"])
         self.add_websocket_route("/updates", self._handle_updates)
 
-    async def _get_worker_state(self) -> Dict[str, bool]:
-        return self.worker_instance.state.to_dict() if self.worker_instance else {}
+    async def _get_worker_state(self) -> Dict[str, Any]:
+        return (
+            self.worker_instance.state.to_dict(encode_json=False)
+            if self.worker_instance
+            else {}
+        )
 
     async def _instantiate_worker(self, config: WorkerConfig) -> Dict[str, Any]:
         if self.worker_instance is not None:
@@ -76,22 +82,33 @@ class ChimeraPyWorkerUI(FastAPI):
                 status_code=405,
                 detail="Worker already instantiated. Please restart the server.",
             )
+        try:
+            self.worker_instance = instantiate_worker(
+                name=config.name,
+                id=config.id or None,
+                wport=config.wport or 0,
+                delete_temp=config.delete_temp,
+                port=config.port,
+                ip=config.ip,
+                zeroconf=config.zeroconf,
+            )
+            await self._initialize_updater()
+        except TimeoutError:
+            self.worker_instance = None
+            raise HTTPException(
+                status_code=408, detail="Connection to manager timed out."
+            )
+        except Exception as e:
+            self.worker_instance = None
+            raise HTTPException(status_code=500, detail=str(e))
 
-        self.worker_instance = instantiate_worker(
-            name=config.name,
-            id=config.id,
-            wport=config.wport,
-            delete_temp=config.delete_temp,
-            port=config.port,
-            ip=config.ip,
-            zeroconf=config.zeroconf,
-        )
-        # await self._initialize_updater()
         return self.worker_instance.state.to_dict(encode_json=False)
 
     async def _initialize_updater(self):
         if self.worker_instance is not None:
-            await self.updates_broadcaster.initialize()
+            await self.updates_broadcaster.initialize(
+                state=self.worker_instance.state, eventbus=self.worker_instance.eventbus
+            )
 
     async def _handle_updates(self, ws: WebSocket) -> None:
         await ws.accept()
@@ -123,6 +140,24 @@ class ChimeraPyWorkerUI(FastAPI):
             finally:
                 await self.updates_broadcaster.remove_client(update_queue)
                 await ws.close()
+
+    async def _can_shutdown_worker(self) -> Tuple[bool, str]:
+        if self.worker_instance is None:
+            return False, "Worker not instantiated."
+        if len(self.worker_instance.state.nodes) > 0:
+            return False, "Worker has active nodes."
+
+        return True, "Worker can be shutdown."
+
+    async def _shutdown_worker(self) -> Dict[str, Any]:
+        can, reason = await self._can_shutdown_worker()
+        if not can:
+            raise HTTPException(status_code=409, detail=reason)
+        else:
+            assert self.worker_instance is not None
+            await self.worker_instance.async_shutdown()
+            self.worker_instance = None
+            return {}
 
 
 def create_worker_ui_app():

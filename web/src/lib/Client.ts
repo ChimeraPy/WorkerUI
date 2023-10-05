@@ -1,4 +1,6 @@
-import type { WorkerConfig } from './models';
+import type { WorkerConfig, ResponseError, WorkerState } from './models';
+import { Err, Ok } from 'ts-monads';
+import type { Result } from 'ts-monads';
 
 export class WorkerClient {
 	private url: string;
@@ -7,30 +9,50 @@ export class WorkerClient {
 		this.url = url;
 	}
 
-	async getWorkerState() {
+	async getWorkerState(): Promise<Result<WorkerState, ResponseError>> {
 		const response = await this._fetch('/state', {
 			method: 'GET'
 		});
 
-		return await response.json();
+		return response;
 	}
 
-	async connect(config: WorkerConfig) {
-		const response = await this._fetch('/connect', {
+	async connect(config: WorkerConfig): Promise<Result<WorkerState, ResponseError>> {
+		const response = await this._fetch<WorkerState>('/connect', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(config)
 		});
-		return await response.json() as WorkerConfig;
+		return response;
 	}
 
-	async _fetch(path: string, init?: RequestInit): Promise<Response> {
-		const response = await fetch(`${this.url}${path}`, init);
-		if (!response.ok) {
-			throw new Error(response.statusText);
-		}
+	async shutdown(): Promise<Result<WorkerState, ResponseError>> {
+		const response = await this._fetch<WorkerState>('/shutdown', {
+			method: 'POST'
+		});
 		return response;
+	}
+
+	async _fetch<T>(prefix: string, options: RequestInit): Promise<Result<T, ResponseError>> {
+		const res = await fetch(this.url + prefix, options);
+		if (res.ok) {
+			return new Ok<T>(await res.json());
+		} else {
+			if (res.status < 500) {
+				return new Err({
+					message: res.statusText,
+					code: res.status,
+					serverMessage: await res.json()
+				});
+			} else {
+				return new Err({
+					message: res.statusText,
+					code: res.status,
+					serverMessage: await res.text()
+				});
+			}
+		}
 	}
 }

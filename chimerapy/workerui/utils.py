@@ -26,12 +26,15 @@ def instantiate_worker(
         delete_temp=delete_temp,
         port=wport,
     )
-
-    worker.connect(
-        port=port,
-        host=ip,
-        method=method,
-        timeout=timeout,
-    )
+    try:
+        worker.connect(
+            port=port,
+            host=ip,
+            method=method,
+            timeout=timeout,
+        )
+    except Exception as e:
+        worker.shutdown(blocking=True)
+        raise e
 
     return worker

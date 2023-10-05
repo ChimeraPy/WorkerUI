@@ -1,3 +1,8 @@
+export interface ResponseError {
+	message: string;
+	code: number;
+}
+
 export interface WorkerConfig {
 	name: string;
 	wport: number;
@@ -12,7 +17,7 @@ export interface WorkerConfig {
 export interface RegisteredMethod {
 	name: string;
 	style: string;
-	params: {[key: string]: string};
+	params: { [key: string]: string };
 }
 
 export interface NodeDiagnostics {
@@ -28,8 +33,17 @@ export interface NodeState {
 	id: string;
 	name: string;
 	port: number;
-	fsm: "NULL"|"INITIALIZED"|"CONNECTED"|"READY"|"PREVIEWING"|"RECORDING"|"STOPPED"|"SAVED"|"SHUTDOWN",
-	registered_methods: {[key: string]: RegisteredMethod}
+	fsm:
+		| 'NULL'
+		| 'INITIALIZED'
+		| 'CONNECTED'
+		| 'READY'
+		| 'PREVIEWING'
+		| 'RECORDING'
+		| 'STOPPED'
+		| 'SAVED'
+		| 'SHUTDOWN';
+	registered_methods: { [key: string]: RegisteredMethod };
 	logdir: string;
 	diagonostics: NodeDiagnostics;
 }
@@ -37,7 +51,7 @@ export interface NodeState {
 export interface WorkerState {
 	id: string;
 	name: string;
-	nodes: {[key: string]: NodeState};
+	nodes: { [key: string]: NodeState };
 	ip: string;
 	port: number;
 	tempfolder: string;

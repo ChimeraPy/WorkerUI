@@ -35,7 +35,7 @@ class WorkerStateBroadcaster:
 
     async def on_state_changed(self):
         for client in self.clients:
-            await client.put(self.state.to_dict(encode_json=True))
+            await client.put(self.state.to_dict(encode_json=False))
 
     async def add_client(self, q: asyncio.Queue):
         self.clients.add(q)
