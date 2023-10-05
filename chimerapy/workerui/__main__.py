@@ -109,6 +109,7 @@ def serve_worker_ui(args):
     """Serve the worker UI."""
     run(
         "chimerapy.workerui.server:create_worker_ui_app",
+        host="0.0.0.0",
         port=args.port,
         log_level="info",
         factory=True,
