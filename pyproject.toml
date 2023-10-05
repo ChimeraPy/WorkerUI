@@ -47,7 +47,7 @@ include-package-data = true
 where = ["."]
 
 [tool.setuptools.package-data]
-chimerapy = ['worker_ui/build/*']
+chimerapy = ['workerui/build/*']
 
 [tool.mypy]
 files = "chimerapy"
