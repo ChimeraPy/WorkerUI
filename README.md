@@ -58,7 +58,7 @@ The Worker UI script provides a Command Line Interface (CLI) (`cp-worker`) with 
 
 2. **Serve the ChimeraPy Worker UI**:
    ```bash
-   python <script_name>.py ui [OPTIONS]
+   cp-worker ui [OPTIONS]
    ```
 
    Options:
