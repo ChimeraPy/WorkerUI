@@ -99,8 +99,7 @@ class ChimeraPyWorkerUI(FastAPI):
             )
             print("Connected to manager.")
             await self._initialize_updater()
-        except TimeoutError as e:
-            raise e
+        except TimeoutError:
             self.worker_instance = None
             raise HTTPException(
                 status_code=408, detail="Connection to manager timed out."
