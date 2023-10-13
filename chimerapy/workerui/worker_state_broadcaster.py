@@ -1,8 +1,8 @@
 import asyncio
 from typing import Dict, Optional
 
+from chimerapy.engine.eventbus import EventBus, TypedObserver
 from chimerapy.engine.states import WorkerState
-from chimerapy.engine.eventbus import TypedObserver, EventBus
 
 
 class WorkerStateBroadcaster:
