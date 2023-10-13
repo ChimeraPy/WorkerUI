@@ -1,0 +1,44 @@
+{
+  "name": "webcam-demo-remote",
+  "description": "A demo with a webcam node and a show window node with remote workers",
+  "workers": {
+    "manager_ip": "129.59.104.153",
+    "manager_port": 9001,
+    "instances": [
+      {
+        "name": "local",
+        "id": "local",
+        "remote": false,
+        "description": "Local worker for the webcam demo with a webcam node"
+      },
+      {
+        "name": "worker1",
+        "id": "worker1",
+        "remote": true,
+        "description": "Worker 1 for the webcam demo with a webcam node and a show window node"
+      }
+    ]
+  },
+  "nodes": [
+    "WebcamNode",
+    "ShowWindow"
+  ],
+  "adj": [
+    [
+      "WebcamNode",
+      "ShowWindow"
+    ]
+  ],
+  "manager_config": {
+    "logdir": "cp-logs",
+    "port": 9001
+  },
+  "mappings": {
+    "local": [
+      "WebcamNode"
+    ],
+    "worker1": [
+      "ShowWindow"
+    ]
+  }
+}
