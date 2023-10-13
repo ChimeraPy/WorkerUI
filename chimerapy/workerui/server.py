@@ -1,17 +1,18 @@
-from pathlib import Path
-
-from typing import Dict, Any, Optional, Tuple
+import asyncio
 from concurrent.futures import TimeoutError
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
+
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
 from fastapi.exceptions import HTTPException
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
+
+from chimerapy.engine.worker import Worker
 from chimerapy.workerui.models import WorkerConfig
 from chimerapy.workerui.utils import instantiate_worker
-import asyncio
-from chimerapy.engine.worker import Worker
 from chimerapy.workerui.worker_state_broadcaster import WorkerStateBroadcaster
-from fastapi.websockets import WebSocket, WebSocketDisconnect, WebSocketState
 
 
 async def relay(
@@ -101,12 +102,12 @@ class ChimeraPyWorkerUI(FastAPI):
             await self._initialize_updater()
         except TimeoutError:
             self.worker_instance = None
-            raise HTTPException(
+            raise HTTPException(  # noqa: B904
                 status_code=408, detail="Connection to manager timed out."
             )
         except Exception as e:
             self.worker_instance = None
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=str(e))  # noqa: B904
 
         return self.worker_instance.state.to_dict(encode_json=False)
 

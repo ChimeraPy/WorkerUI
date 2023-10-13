@@ -1,8 +1,9 @@
 """The Worker UI is a web interface for the ChimeraPy worker."""
-from pathlib import Path
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from uvicorn import run
 import asyncio
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+from pathlib import Path
+
+from uvicorn import run
 
 from chimerapy.workerui.utils import instantiate_worker
 
