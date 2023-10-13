@@ -2,6 +2,7 @@
 from pathlib import Path
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from uvicorn import run
+import asyncio
 
 from chimerapy.workerui.utils import instantiate_worker
 
@@ -90,19 +91,33 @@ def add_worker_ui_parser(subparsers):
     )
 
 
-def connect_worker(args):
+async def aconnect_worker(args):
     """Connect the worker to the manager."""
     worker = instantiate_worker(
         name=args.name,
         id=args.id,
         wport=args.wport,
         delete_temp=args.delete_temp,
-        port=args.port,
-        ip=args.ip,
-        zeroconf=args.zeroconf,
+    )
+    print("Starting worker")
+    await worker.aserve()
+
+    port = args.port
+    ip = args.ip
+    zeroconf = args.zeroconf
+
+    method = "zeroconf" if zeroconf else "ip"
+
+    await worker.async_connect(
+        method=method,
+        host=ip,
+        port=port,
+        timeout=args.timeout,
     )
 
-    worker.idle()
+    worker.logger.info("IDLE")
+    while True:
+        await asyncio.sleep(1)
 
 
 def serve_worker_ui(args):
@@ -137,7 +152,7 @@ def main(args=None):
     cli_args = parser.parse_args(args)
 
     if cli_args.subcommand == "connect":
-        connect_worker(cli_args)
+        asyncio.run(aconnect_worker(cli_args))
     elif cli_args.subcommand == "ui":
         serve_worker_ui(cli_args)
     else:
