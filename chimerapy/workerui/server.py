@@ -88,10 +88,16 @@ class ChimeraPyWorkerUI(FastAPI):
                 id=config.id or None,
                 wport=config.wport or 0,
                 delete_temp=config.delete_temp,
-                port=config.port,
-                ip=config.ip,
-                zeroconf=config.zeroconf,
             )
+            await self.worker_instance.aserve()
+
+            await self.worker_instance.async_connect(
+                port=config.port,
+                host=config.ip,
+                timeout=config.timeout,
+                method="zeroconf" if config.zeroconf else "ip",
+            )
+            print("Connected to manager.")
             await self._initialize_updater()
         except TimeoutError:
             self.worker_instance = None

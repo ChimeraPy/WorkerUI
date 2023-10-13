@@ -31,7 +31,7 @@ class WorkerStateBroadcaster:
         self.state = state
 
         for ob in self.observers.values():
-            self.eventbus.subscribe(ob).result(timeout=1)
+            await self.eventbus.asubscribe(ob)
 
     async def on_state_changed(self):
         for client in self.clients:
