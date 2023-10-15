@@ -54,3 +54,23 @@ class TestWorkerConnect(BaseTest):
         assert worker.id == "worker2"
         assert worker.ip == get_ip_address()
         assert worker.nodes == {}
+
+    @pytest.mark.asyncio
+    async def test_connection_error_no_manager(self):
+        command = [
+            "cp-worker",
+            "connect",
+            "--name",
+            "worker1",
+            "--id",
+            "worker1",
+            "-z",
+            "-t",
+            "10",
+        ]
+
+        p = subprocess.Popen(command, stderr=subprocess.PIPE)
+        _, stderr = p.communicate()
+        await asyncio.sleep(15)
+        assert b"ConnectionError" in stderr
+        assert p.returncode == 1
