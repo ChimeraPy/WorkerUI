@@ -109,12 +109,18 @@ async def aconnect_worker(args):
 
     method = "zeroconf" if zeroconf else "ip"
 
-    await worker.async_connect(
+    success = await worker.async_connect(
         method=method,
         host=ip,
         port=port,
         timeout=args.timeout,
     )
+
+    if not success:
+        raise ConnectionError(
+            "Connection to ChimeraPy Manager Failed. "
+            "Please retry when the manager is running."
+        )
 
     worker.logger.info("IDLE")
     while True:
