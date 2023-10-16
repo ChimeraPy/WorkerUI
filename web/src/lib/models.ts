@@ -55,4 +55,6 @@ export interface WorkerState {
 	ip: string;
 	port: number;
 	tempfolder: string;
+
+	connected_to_manager: boolean;
 }
