@@ -17,6 +17,18 @@ export class WorkerClient {
 		return response;
 	}
 
+	async start(config: WorkerConfig): Promise<Result<WorkerState, ResponseError>> {
+		const response = await this._fetch<WorkerState>('/start', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(config)
+		});
+
+		return response;
+	}
+
 	async connect(config: WorkerConfig): Promise<Result<WorkerState, ResponseError>> {
 		const response = await this._fetch<WorkerState>('/connect', {
 			method: 'POST',
@@ -30,6 +42,13 @@ export class WorkerClient {
 
 	async shutdown(): Promise<Result<WorkerState, ResponseError>> {
 		const response = await this._fetch<WorkerState>('/shutdown', {
+			method: 'POST'
+		});
+		return response;
+	}
+
+	async disconnect(): Promise<Result<WorkerState, ResponseError>> {
+		const response = await this._fetch<WorkerState>('/disconnect', {
 			method: 'POST'
 		});
 		return response;
